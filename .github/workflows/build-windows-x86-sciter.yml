@@ -135,11 +135,12 @@ jobs:
             !./Release/**/*.exp
             !./Release/**/*.pdb
 
-      - name: Publish Release
-        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
-        with:
-          prerelease: true
-          tag_name: ${{ env.TAG_NAME }}
-          files: ./SignOutput/rustdesk-*.exe
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Release step disabled to avoid tag conflicts; artifact upload is sufficient for testing
+      # - name: Publish Release
+      #   uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
+      #   with:
+      #     prerelease: true
+      #     tag_name: ${{ env.TAG_NAME }}
+      #     files: ./SignOutput/rustdesk-*.exe
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
