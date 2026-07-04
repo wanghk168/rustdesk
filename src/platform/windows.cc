@@ -2,10 +2,7 @@
 #include <wtsapi32.h>
 #include <tlhelp32.h>
 #include <comdef.h>
-// XPS Print API requires Windows Vista+ (_WIN32_WINNT >= 0x0600)
-#if _WIN32_WINNT >= 0x0600
 #include <xpsprint.h>
-#endif
 #include <cstdio>
 #include <cstdint>
 #include <intrin.h>
@@ -896,8 +893,7 @@ extern "C"
     }
 } // end of extern "C"
 
-// Remote printing (requires Windows Vista+ / XPS Print API)
-#if _WIN32_WINNT >= 0x0600
+// Remote printing 
 extern "C"
 {
 // Dynamic loading of XPS Print functions
@@ -1060,14 +1056,3 @@ static bool InitXpsPrint()
 
 #pragma warning(pop)
 }
-#else
-// XPS Printing is not available on Windows XP (requires Vista+)
-// Provide stub functions so the linker does not fail.
-extern "C"
-{
-    int PrintXPSRawData(LPWSTR printerName, BYTE *rawData, ULONG dataSize)
-    {
-        return -1; // not supported
-    }
-}
-#endif

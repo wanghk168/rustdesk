@@ -1,14 +1,12 @@
 [target.x86_64-pc-windows-msvc]
 rustflags = ["-Ctarget-feature=+crt-static"]
 # i686 XP SP3 build: requires nightly toolchain for -Z build-std (rebuilds std without SSE2+)
-# NOTE: ring crate (rustls) asserts cfg!(target_feature="sse2"), so SSE2 must stay enabled.
-# Disable SSE3+ only. MMX/SSE/SSE2 baseline covers XP SP3 era CPUs (Pentium 4+ / Athlon 64+).
 # Build command:
 #   set VCPKG_SSE_ONLY=1
 #   cargo +nightly build -Z build-std=std,panic_abort --target i686-pc-windows-msvc --release
 [target.i686-pc-windows-msvc]
 rustflags = [
-    "-C", "target-feature=+crt-static,-sse3,-ssse3,-sse4.1,-sse4.2,-avx,-avx2",
+    "-C", "target-feature=+crt-static,-sse2,-sse3,-ssse3,-sse4.1,-sse4.2,-avx,-avx2",
     "-C", "link-args=/NODEFAULTLIB:MSVCRT /DELAYLOAD:d3d11.dll /DELAYLOAD:dxgi.dll delayimp.lib /SUBSYSTEM:WINDOWS,5.01"
 ]
 [target.aarch64-pc-windows-msvc]

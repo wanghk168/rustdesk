@@ -26,17 +26,6 @@ vcpkg_find_acquire_program(NASM)
 get_filename_component(NASM_EXE_PATH ${NASM} DIRECTORY)
 vcpkg_add_to_path(${NASM_EXE_PATH})
 
-if(VCPKG_TARGET_IS_WINDOWS AND DEFINED ENV{VCPKG_SSE_ONLY})
-    # XP/SSE-only: prefer NASM from setup-nasm action
-    if(DEFINED ENV{PROGRAMFILES})
-        # setup-nasm installs here by default
-        file(TO_CMAKE_PATH "$ENV{LOCALAPPDATA}/nasm" setup_nasm_dir)
-        if(EXISTS "${setup_nasm_dir}/nasm.exe")
-            set(ENV{PATH} "${setup_nasm_dir};$ENV{PATH}")
-        endif()
-    endif()
-endif()
-
 if(VCPKG_TARGET_IS_WINDOWS AND NOT VCPKG_TARGET_IS_MINGW)
 
     file(REMOVE_RECURSE "${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-tmp")
@@ -81,7 +70,7 @@ if(VCPKG_TARGET_IS_WINDOWS AND NOT VCPKG_TARGET_IS_MINGW)
     set(OPTIONS "--disable-examples --disable-tools --disable-docs --enable-pic")
 
     if(DEFINED ENV{VCPKG_SSE_ONLY})
-        set(OPTIONS "${OPTIONS} --disable-sse3 --disable-ssse3 --disable-sse4_1")
+        set(OPTIONS "${OPTIONS} --disable-sse2 --disable-sse3 --disable-ssse3 --disable-sse4_1")
     endif()
 
     if("realtime" IN_LIST FEATURES)
