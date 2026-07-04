@@ -2,7 +2,14 @@
 fn build_windows() {
     let file = "src/platform/windows.cc";
     let file2 = "src/platform/windows_delete_test_cert.cc";
-    cc::Build::new().file(file).file(file2).compile("windows");
+    let mut b = cc::Build::new();
+    let target_arch = std::env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
+    // For i686 (XP target), define _WIN32_WINNT=0x0501 to restrict to XP-compatible APIs
+    if target_arch == "x86" {
+        b.define("_WIN32_WINNT", "0x0501");
+        b.define("WINVER", "0x0501");
+    }
+    b.file(file).file(file2).compile("windows");
     println!("cargo:rustc-link-lib=WtsApi32");
     println!("cargo:rerun-if-changed={}", file);
     println!("cargo:rerun-if-changed={}", file2);

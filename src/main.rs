@@ -25,7 +25,18 @@ fn main() {
 fn main() {
     #[cfg(all(windows, not(feature = "inline")))]
     unsafe {
-        winapi::um::shellscalingapi::SetProcessDpiAwareness(2);
+        // SetProcessDpiAwareness is Win8.1+. Use dynamic loading for XP compatibility.
+        use winapi::um::libloaderapi::{GetModuleHandleA, GetProcAddress};
+        use std::ffi::CString;
+        let shcore = GetModuleHandleA(CString::new("shcore.dll").unwrap().as_ptr());
+        if !shcore.is_null() {
+            let func_name = CString::new("SetProcessDpiAwareness").unwrap();
+            let func: Option<unsafe extern "system" fn(i32) -> i32> =
+                std::mem::transmute(GetProcAddress(shcore, func_name.as_ptr()));
+            if let Some(set_dpi) = func {
+                set_dpi(2); // PROCESS_PER_MONITOR_DPI_AWARE
+            }
+        }
     }
     if let Some(args) = crate::core_main::core_main().as_mut() {
         ui::start(args);

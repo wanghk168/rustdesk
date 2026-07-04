@@ -19,7 +19,7 @@ use winapi::{
     },
     um::{
         errhandlingapi::GetLastError,
-        libloaderapi::{FreeLibrary, GetModuleHandleExA, GetProcAddress, LoadLibraryExA},
+        libloaderapi::{FreeLibrary, GetModuleHandleExA, GetProcAddress, LoadLibraryA, LoadLibraryExA},
         winuser::*,
     },
 };
@@ -156,7 +156,7 @@ impl MagInterface {
         };
         s.init_succeeded = false;
         unsafe {
-            // load lib
+            // load lib - try LOAD_LIBRARY_SEARCH_SYSTEM32 (Win8+), fall back to plain LoadLibraryA (XP)
             let lib_file_name = "Magnification.dll";
             let lib_file_name_c = CString::new(lib_file_name)?;
             s.lib_handle = LoadLibraryExA(
@@ -164,6 +164,11 @@ impl MagInterface {
                 NULL,
                 LOAD_LIBRARY_SEARCH_SYSTEM32,
             );
+            if s.lib_handle.is_null() {
+                // Fallback for Windows XP (doesn't support LOAD_LIBRARY_SEARCH_SYSTEM32)
+                let lib_file_name_c = CString::new(lib_file_name)?;
+                s.lib_handle = LoadLibraryA(lib_file_name_c.as_ptr() as _);
+            }
             if s.lib_handle.is_null() {
                 return Err(Error::new(
                     ErrorKind::Other,

@@ -82,6 +82,9 @@ set(OPTIONS "\
 --enable-muxer=mp4 \
 --enable-protocol=file \
 ")
+if(DEFINED ENV{VCPKG_SSE_ONLY})
+    string(APPEND OPTIONS " --disable-asm")
+endif()
 
 if(VCPKG_HOST_IS_WINDOWS)
     vcpkg_acquire_msys(MSYS_ROOT PACKAGES automake1.16)

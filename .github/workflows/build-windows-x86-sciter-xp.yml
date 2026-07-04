@@ -1,4 +1,4 @@
-name: Build Windows x86 Sciter
+name: Build Windows x86 Sciter XP
 
 on:
   workflow_dispatch:
@@ -17,8 +17,8 @@ env:
   SIGN_BASE_URL: "-2"
 
 jobs:
-  build-windows-x86-sciter:
-    name: Build RustDesk Windows x86 Sciter
+  build-windows-x86-sciter-xp:
+    name: Build RustDesk Windows x86 Sciter XP
     runs-on: windows-2022
     strategy:
       fail-fast: false
@@ -53,11 +53,11 @@ jobs:
         with:
           toolchain: nightly-2023-10-13-${{ matrix.job.target }}
           targets: ${{ matrix.job.target }}
-          components: "rustfmt"
+          components: "rustfmt,rust-src"
 
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32
         with:
-          prefix-key: ${{ matrix.job.os }}-sciter
+          prefix-key: ${{ matrix.job.os }}-sciter-xp
 
       - name: Setup vcpkg with Github Actions binary cache
         uses: lukka/run-vcpkg@b1a0dd252f06b9e25b3c022a9a03bd7a427fb6a2
@@ -66,11 +66,12 @@ jobs:
           vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
           doNotCache: false
 
-      - name: Install vcpkg dependencies
+      - name: Install vcpkg dependencies (XP SSE-only)
         env:
           VCPKG_DEFAULT_HOST_TRIPLET: ${{ matrix.job.vcpkg-triplet }}
+          VCPKG_SSE_ONLY: "1"
         run: |
-          if ! $VCPKG_ROOT/vcpkg install --triplet ${{ matrix.job.vcpkg-triplet }} --x-install-root="$VCPKG_ROOT/installed"; then
+          if ! $VCPKG_ROOT/vcpkg install --triplet ${{ matrix.job.vcpkg-triplet }} --x-install-root="$VCPKG_ROOT/installed" --overlay-ports="res/vcpkg"; then
             find "${VCPKG_ROOT}/" -name "*.log" | while read -r _1; do
               echo "$_1:"
               echo "======"
@@ -83,16 +84,18 @@ jobs:
           head -n 100 "${VCPKG_ROOT}/buildtrees/ffmpeg/build-${{ matrix.job.vcpkg-triplet }}-rel-out.log" || true
         shell: bash
 
-      - name: Build rustdesk
+      - name: Build rustdesk (XP compatible)
         id: build
         shell: bash
+        env:
+          VCPKG_SSE_ONLY: "1"
         run: |
           python3 res/inline-sciter.py
           sed -i 's/branch = "dyn"/branch = "dyn_x86"/g' ./Cargo.toml
           cargo update -p sciter-rs --precise 674e07d3066ca9a92ced3816203ab6b652629d1e
-          cargo build --locked --features inline,vram,hwcodec --release --bins
+          cargo +nightly-2023-10-13-${{ matrix.job.target }} build -Z build-std=std,panic_abort --locked --features inline,vram,hwcodec --release --bins --target ${{ matrix.job.target }}
           mkdir -p ./Release
-          mv ./target/release/rustdesk.exe ./Release/rustdesk.exe
+          mv ./target/${{ matrix.job.target }}/release/rustdesk.exe ./Release/rustdesk.exe
           curl -LJ -o ./Release/sciter.dll https://github.com/c-smile/sciter-sdk/raw/master/bin.win/x32/sciter.dll
           echo "output_folder=./Release" >> $GITHUB_OUTPUT
           curl -LJ -o ./usbmmidd_v2.zip https://github.com/rustdesk-org/rdev/releases/download/usbmmidd_v2/usbmmidd_v2.zip
@@ -122,12 +125,12 @@ jobs:
           python3 ./generate.py -f ../../Release/ -o . -e ../../Release/rustdesk.exe
           popd
           mkdir -p ./SignOutput
-          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.exe
+          mv ./target/${{ matrix.job.target }}/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter-xp.exe
 
       - name: Upload unsigned artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: rustdesk-windows-${{ matrix.job.arch }}-sciter
+          name: rustdesk-windows-${{ matrix.job.arch }}-sciter-xp
           path: |
             ./Release/
             ./SignOutput/

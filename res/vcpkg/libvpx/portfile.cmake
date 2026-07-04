@@ -69,6 +69,10 @@ if(VCPKG_TARGET_IS_WINDOWS AND NOT VCPKG_TARGET_IS_MINGW)
 
     set(OPTIONS "--disable-examples --disable-tools --disable-docs --enable-pic")
 
+    if(DEFINED ENV{VCPKG_SSE_ONLY})
+        set(OPTIONS "${OPTIONS} --disable-sse2 --disable-sse3 --disable-ssse3 --disable-sse4_1")
+    endif()
+
     if("realtime" IN_LIST FEATURES)
         set(OPTIONS "${OPTIONS} --enable-realtime-only")
     endif()
