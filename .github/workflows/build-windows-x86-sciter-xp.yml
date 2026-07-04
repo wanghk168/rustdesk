@@ -58,6 +58,10 @@ jobs:
       - name: Install vcpkg dependencies
         run: |
           $env:VCPKG_SSE_ONLY = "1"
+          # Force vcpkg ports to use the NASM we just installed.
+          $env:PATH = "C:\Users\runneradmin\nasm;$env:PATH"
+          # Remove any broken vcpkg-downloaded nasm so ports fall back to PATH.
+          if (Test-Path "C:\vcpkg\downloads\tools\nasm") { Remove-Item -Recurse -Force "C:\vcpkg\downloads\tools\nasm" }
           vcpkg integrate install
           # In manifest mode, vcpkg install reads vcpkg.json automatically.
           vcpkg install --triplet x86-windows-static --overlay-ports=${{ github.workspace }}\res\vcpkg
