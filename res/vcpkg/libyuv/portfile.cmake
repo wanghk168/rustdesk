@@ -41,8 +41,8 @@ if (VCPKG_DETECTED_CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT VCPKG_TARGET_IS
     set(CLANG_TARGET "${CLANG_TARGET}-pc-windows-msvc")
 
     if(DEFINED ENV{VCPKG_SSE_ONLY})
-        string(APPEND VCPKG_DETECTED_CMAKE_CXX_FLAGS " -msse -mno-sse2 -mno-sse3 -mno-ssse3 -mno-sse4.1 -mno-sse4.2 -mno-avx -mno-avx2")
-        string(APPEND VCPKG_DETECTED_CMAKE_C_FLAGS " -msse -mno-sse2 -mno-sse3 -mno-ssse3 -mno-sse4.1 -mno-sse4.2 -mno-avx -mno-avx2")
+        string(APPEND VCPKG_DETECTED_CMAKE_CXX_FLAGS " -mno-sse3 -mno-ssse3 -mno-sse4.1 -mno-sse4.2 -mno-avx -mno-avx2")
+        string(APPEND VCPKG_DETECTED_CMAKE_C_FLAGS " -mno-sse3 -mno-ssse3 -mno-sse4.1 -mno-sse4.2 -mno-avx -mno-avx2")
     endif()
 
     message(STATUS "Using clang target ${CLANG_TARGET}")
