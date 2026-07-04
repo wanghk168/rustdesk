@@ -49,6 +49,12 @@ jobs:
         run: |
           rustup target add i686-pc-windows-msvc --toolchain nightly-2023-10-13-i686-pc-windows-msvc
 
+      - name: Install NASM (required by aom/vpx)
+        uses: ilammy/setup-nasm@v1
+        with:
+          version: "2.16.01"
+          from-source: false
+
       - name: Install vcpkg dependencies
         run: |
           $env:VCPKG_SSE_ONLY = "1"
