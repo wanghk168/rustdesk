@@ -1,149 +1,75 @@
 name: Build Windows x86 Sciter XP
 
 on:
-  workflow_dispatch:
   push:
-    branches:
-      - build-windows-x86
+    branches: [build-windows-x86]
+  workflow_dispatch:
 
 env:
-  SCITER_RUST_VERSION: "1.75"
-  RUST_VERSION: "1.75"
-  LLVM_VERSION: "15.0.6"
-  VERSION: "1.4.8"
-  VCPKG_COMMIT_ID: "120deac3062162151622ca4860575a33844ba10b"
-  TAG_NAME: "custom-x86-1.4.8"
-  UPLOAD_ARTIFACT: "true"
-  SIGN_BASE_URL: "-2"
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
 
 jobs:
-  build-windows-x86-sciter-xp:
-    name: Build RustDesk Windows x86 Sciter XP
+  build:
+    name: Build RustDesk Windows x86 Sciter XP (i686-pc-windows-msvc, windows-2022, x86, x86-windows-static)
     runs-on: windows-2022
     strategy:
       fail-fast: false
       matrix:
-        job:
-          - {
-              target: i686-pc-windows-msvc,
-              os: windows-2022,
-              arch: x86,
-              vcpkg-triplet: x86-windows-static,
-            }
+        job: [x86]
+    env:
+      TARGET: i686-pc-windows-msvc
+      RUSTFLAGS: "-Ctarget-feature=+crt-static"
+      VCPKG_DEFAULT_TRIPLET: x86-windows-static
+      VCPKG_s: x86-windows-static
     steps:
-      - name: Export GitHub Actions cache environment variables
-        uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410
-        with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-
-      - name: Checkout source code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Install LLVM and Clang
-        uses: rustdesk-org/install-llvm-action-32bit@6aa7d9ad3df84dff01cd4596dd0fc880a7f47fce
+      - name: Set up vcpkg and cargo cache
+        uses: actions/cache@v4
         with:
-          version: ${{ env.LLVM_VERSION }}
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
-        with:
-          toolchain: nightly-2023-10-13-${{ matrix.job.target }}
-          targets: ${{ matrix.job.target }}
-          components: "rustfmt,rust-src"
-
-      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32
-        with:
-          prefix-key: ${{ matrix.job.os }}-sciter-xp
-
-      - name: Setup vcpkg with Github Actions binary cache
-        uses: lukka/run-vcpkg@b1a0dd252f06b9e25b3c022a9a03bd7a427fb6a2
-        with:
-          vcpkgDirectory: C:\vcpkg
-          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
-          doNotCache: false
-
-      - name: Install vcpkg dependencies (XP SSE-only)
-        env:
-          VCPKG_DEFAULT_HOST_TRIPLET: ${{ matrix.job.vcpkg-triplet }}
-          VCPKG_SSE_ONLY: "1"
-        run: |
-          if ! $VCPKG_ROOT/vcpkg install --triplet ${{ matrix.job.vcpkg-triplet }} --x-install-root="$VCPKG_ROOT/installed" --overlay-ports="res/vcpkg"; then
-            find "${VCPKG_ROOT}/" -name "*.log" | while read -r _1; do
-              echo "$_1:"
-              echo "======"
-              cat "$_1"
-              echo "======"
-              echo ""
-            done
-            exit 1
-          fi
-          head -n 100 "${VCPKG_ROOT}/buildtrees/ffmpeg/build-${{ matrix.job.vcpkg-triplet }}-rel-out.log" || true
-        shell: bash
-
-      - name: Build rustdesk (XP compatible)
-        id: build
-        shell: bash
-        env:
-          VCPKG_SSE_ONLY: "1"
-        run: |
-          python3 res/inline-sciter.py
-          sed -i 's/branch = "dyn"/branch = "dyn_x86"/g' ./Cargo.toml
-          cargo update -p sciter-rs --precise 674e07d3066ca9a92ced3816203ab6b652629d1e
-          cargo +nightly-2023-10-13-${{ matrix.job.target }} build -Z build-std=std,panic_abort --locked --features inline,vram,hwcodec --release --bins --target ${{ matrix.job.target }}
-          mkdir -p ./Release
-          mv ./target/${{ matrix.job.target }}/release/rustdesk.exe ./Release/rustdesk.exe
-          curl -LJ -o ./Release/sciter.dll https://github.com/c-smile/sciter-sdk/raw/master/bin.win/x32/sciter.dll
-          echo "output_folder=./Release" >> $GITHUB_OUTPUT
-          curl -LJ -o ./usbmmidd_v2.zip https://github.com/rustdesk-org/rdev/releases/download/usbmmidd_v2/usbmmidd_v2.zip
-          unzip usbmmidd_v2.zip
-          rm -rf ./usbmmidd_v2/deviceinstaller.exe ./usbmmidd_v2/usbmmidd.bat
-          mv ./usbmmidd_v2 ./Release || true
-
-      - name: find Runner.res
-        continue-on-error: true
-        shell: bash
-        run: |
-          runner_res=$(find . -name "Runner.res");
-          if [ "$runner_res" == "" ]; then
-            echo "Runner.res: not found";
-          else
-            echo "Runner.res: $runner_res";
-            cp $runner_res ./libs/portable/Runner.res;
-            ls -l ./libs/portable/Runner.res;
-          fi
-
-      - name: Build self-extracted executable
-        shell: bash
-        run: |
-          sed -i '/dpiAware/d' res/manifest.xml
-          pushd ./libs/portable
-          pip3 install -r requirements.txt
-          python3 ./generate.py -f ../../Release/ -o . -e ../../Release/rustdesk.exe
-          popd
-          mkdir -p ./SignOutput
-          mv ./target/${{ matrix.job.target }}/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter-xp.exe
-
-      - name: Upload unsigned artifacts
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: rustdesk-windows-${{ matrix.job.arch }}-sciter-xp
           path: |
-            ./Release/
-            ./SignOutput/
-            !./Release/**/*.lib
-            !./Release/**/*.exp
-            !./Release/**/*.pdb
+            C:\vcpkg
+            C:\Users\runneradmin\AppData\Local\vcpkg
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-rustdesk-xp-x86-${{ hashFiles('**/Cargo.lock') }}
 
-      # Release step disabled to avoid tag conflicts; artifact upload is sufficient for testing
-      # - name: Publish Release
-      #   uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
-      #   with:
-      #     prerelease: true
-      #     tag_name: ${{ env.TAG_NAME }}
-      #     files: ./SignOutput/rustdesk-*.exe
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install Rust i686 toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2023-10-13-i686-pc-windows-msvc
+          targets: i686-pc-windows-msvc
+          components: rust-src
+
+      - name: Add Rust std target
+        run: |
+          rustup target add i686-pc-windows-msvc --toolchain nightly-2023-10-13-i686-pc-windows-msvc
+
+      - name: Install vcpkg dependencies
+        run: |
+          $env:VCPKG_SSE_ONLY = "1"
+          vcpkg integrate install
+          vcpkg install --triplet x86-windows-static --overlay-ports=${{ github.workspace }}\res\vcpkg @${{ github.workspace }}\vcpkg.json
+        shell: pwsh
+
+      - name: Build RustDesk (x86 XP)
+        run: |
+          $env:VCPKG_SSE_ONLY = "1"
+          cargo +nightly-2023-10-13-i686-pc-windows-msvc build -Z build-std=std,panic_abort --locked --features inline,vram,hwcodec --release --bins --target i686-pc-windows-msvc
+        shell: pwsh
+
+      - name: Package artifact
+        run: |
+          mkdir -p ${{ github.workspace }}\artifacts
+          copy target\i686-pc-windows-msvc\release\rustdesk.exe ${{ github.workspace }}\artifacts\rustdesk-1.4.8-x86-sciter-xp-run${{ github.run_id }}.exe
+        shell: pwsh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rustdesk-xp-x86-${{ github.run_id }}
+          path: ${{ github.workspace }}\artifacts\rustdesk-1.4.8-x86-sciter-xp-run${{ github.run_id }}.exe
