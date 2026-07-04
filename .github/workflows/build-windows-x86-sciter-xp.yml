@@ -22,6 +22,7 @@ jobs:
       RUSTFLAGS: "-Ctarget-feature=+crt-static"
       VCPKG_DEFAULT_TRIPLET: x86-windows-static
       VCPKG_s: x86-windows-static
+      VCPKG_FORCE_SYSTEM_BINARIES: 1
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,7 +37,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-rustdesk-xp-x86-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-rustdesk-xp-x86-nasm216-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Install Rust i686 toolchain
         uses: dtolnay/rust-toolchain@master
