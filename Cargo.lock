@@ -7115,7 +7115,7 @@ dependencies = [
 [[package]]
 name = "ring"
 version = "0.17.14"
-source = "git+https://github.com/wanghk168/ring-xp-compat?branch=ring-0.17.14-xp#20e6f989bda62fb940d139a0ddd777dec5fa30d3"
+source = "git+https://github.com/wanghk168/ring-xp-compat?branch=ring-0.17.14-xp#49b6714405404230ba6eaf53e7eab9006ba98748"
 dependencies = [
  "cc",
  "cfg-if 1.0.0",
