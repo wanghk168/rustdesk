@@ -40,16 +40,16 @@ jobs:
             target
           key: ${{ runner.os }}-rustdesk-xp-x86-nasm216-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Install Rust i686 toolchain
+      - name: Install Rust x86_64 host toolchain (build scripts run 64-bit, bindgen uses 64-bit libclang)
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: nightly-2023-10-13-i686-pc-windows-msvc
+          toolchain: nightly-2023-10-13-x86_64-pc-windows-msvc
           targets: i686-pc-windows-msvc
           components: rust-src
 
-      - name: Add Rust std target
+      - name: Add Rust i686 target
         run: |
-          rustup target add i686-pc-windows-msvc --toolchain nightly-2023-10-13-i686-pc-windows-msvc
+          rustup target add i686-pc-windows-msvc --toolchain nightly-2023-10-13-x86_64-pc-windows-msvc
 
       - name: Install NASM (required by aom/vpx)
         uses: ilammy/setup-nasm@v1
@@ -76,7 +76,7 @@ jobs:
       - name: Build RustDesk (x86 XP)
         run: |
           $env:VCPKG_SSE_ONLY = "1"
-          cargo +nightly-2023-10-13-i686-pc-windows-msvc build -Z build-std=std,panic_abort --locked --features inline --release --bins --target i686-pc-windows-msvc
+          cargo +nightly-2023-10-13-x86_64-pc-windows-msvc build -Z build-std=std,panic_abort --locked --features inline --release --bins --target i686-pc-windows-msvc
         shell: pwsh
 
       - name: Package artifact
