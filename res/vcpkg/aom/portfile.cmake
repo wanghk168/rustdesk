@@ -7,6 +7,7 @@ vcpkg_add_to_path(${PERL_PATH})
 # In VCPKG_SSE_ONLY mode we disable NASM entirely, so we don't need to acquire
 # the broken vcpkg-downloaded nasm-3.01. For other modes, acquire it normally.
 string(STRIP "$ENV{VCPKG_SSE_ONLY}" VCPKG_SSE_ONLY_VALUE)
+message(STATUS "VCPKG_SSE_ONLY env='$ENV{VCPKG_SSE_ONLY}' value='${VCPKG_SSE_ONLY_VALUE}'")
 if(NOT VCPKG_SSE_ONLY_VALUE STREQUAL "1")
     vcpkg_find_acquire_program(NASM)
     get_filename_component(NASM_EXE_PATH ${NASM} DIRECTORY)
@@ -51,6 +52,7 @@ if(VCPKG_SSE_ONLY_VALUE STREQUAL "1")
         -DENABLE_AVX=OFF
         -DENABLE_AVX2=OFF
     )
+    message(STATUS "VCPKG_SSE_ONLY enabled; aom_options = ${aom_options}")
 elseif(VCPKG_TARGET_IS_UWP OR (VCPKG_TARGET_IS_WINDOWS AND VCPKG_TARGET_ARCHITECTURE MATCHES "^arm"))
     # UWP + aom's assembler files result in weirdness and build failures
     # Also, disable assembly on ARM and ARM64 Windows to fix compilation issues.
