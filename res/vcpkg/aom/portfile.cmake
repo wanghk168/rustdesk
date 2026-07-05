@@ -1,12 +1,16 @@
-# NASM is required to build AOM
-vcpkg_find_acquire_program(NASM)
-get_filename_component(NASM_EXE_PATH ${NASM} DIRECTORY)
-vcpkg_add_to_path(${NASM_EXE_PATH})
-
 # Perl is required to build AOM
 vcpkg_find_acquire_program(PERL)
 get_filename_component(PERL_PATH ${PERL} DIRECTORY)
 vcpkg_add_to_path(${PERL_PATH})
+
+# NASM is normally required for AOM assembly optimizations.
+# In VCPKG_SSE_ONLY mode we disable NASM entirely, so we don't need to acquire
+# the broken vcpkg-downloaded nasm-3.01. For other modes, acquire it normally.
+if(NOT DEFINED ENV{VCPKG_SSE_ONLY})
+    vcpkg_find_acquire_program(NASM)
+    get_filename_component(NASM_EXE_PATH ${NASM} DIRECTORY)
+    vcpkg_add_to_path(${NASM_EXE_PATH})
+endif()
 
 if(DEFINED ENV{USE_AOM_391})
     vcpkg_from_git(
@@ -31,14 +35,24 @@ else()
     )
 endif()
 
-set(aom_target_cpu "")
+set(aom_options "")
 if(DEFINED ENV{VCPKG_SSE_ONLY})
     # XP/SSE-only: disable NASM assembly to avoid broken vcpkg-downloaded nasm-3.01 and all SSE2+ optimizations
-    set(aom_target_cpu "-DAOM_TARGET_CPU=generic -DENABLE_NASM=OFF -DENABLE_SSE2=OFF -DENABLE_SSE3=OFF -DENABLE_SSSE3=OFF -DENABLE_SSE4_1=OFF -DENABLE_SSE4_2=OFF -DENABLE_AVX=OFF -DENABLE_AVX2=OFF")
+    list(APPEND aom_options
+        -DAOM_TARGET_CPU=generic
+        -DENABLE_NASM=OFF
+        -DENABLE_SSE2=OFF
+        -DENABLE_SSE3=OFF
+        -DENABLE_SSSE3=OFF
+        -DENABLE_SSE4_1=OFF
+        -DENABLE_SSE4_2=OFF
+        -DENABLE_AVX=OFF
+        -DENABLE_AVX2=OFF
+    )
 elseif(VCPKG_TARGET_IS_UWP OR (VCPKG_TARGET_IS_WINDOWS AND VCPKG_TARGET_ARCHITECTURE MATCHES "^arm"))
     # UWP + aom's assembler files result in weirdness and build failures
     # Also, disable assembly on ARM and ARM64 Windows to fix compilation issues.
-    set(aom_target_cpu "-DAOM_TARGET_CPU=generic")
+    list(APPEND aom_options -DAOM_TARGET_CPU=generic)
 endif()
 
 if(VCPKG_TARGET_ARCHITECTURE STREQUAL "arm" AND VCPKG_TARGET_IS_LINUX)
@@ -48,7 +62,7 @@ endif()
 vcpkg_cmake_configure(
     SOURCE_PATH ${SOURCE_PATH}
     OPTIONS
-        ${aom_target_cpu}
+        ${aom_options}
         -DENABLE_DOCS=OFF
         -DENABLE_EXAMPLES=OFF
         -DENABLE_TESTDATA=OFF
