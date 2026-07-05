@@ -6,7 +6,8 @@ vcpkg_add_to_path(${PERL_PATH})
 # NASM is normally required for AOM assembly optimizations.
 # In VCPKG_SSE_ONLY mode we disable NASM entirely, so we don't need to acquire
 # the broken vcpkg-downloaded nasm-3.01. For other modes, acquire it normally.
-if(NOT "$ENV{VCPKG_SSE_ONLY}" STREQUAL "1")
+string(STRIP "$ENV{VCPKG_SSE_ONLY}" VCPKG_SSE_ONLY_VALUE)
+if(NOT VCPKG_SSE_ONLY_VALUE STREQUAL "1")
     vcpkg_find_acquire_program(NASM)
     get_filename_component(NASM_EXE_PATH ${NASM} DIRECTORY)
     vcpkg_add_to_path(${NASM_EXE_PATH})
@@ -37,7 +38,7 @@ else()
 endif()
 
 set(aom_options "")
-if("$ENV{VCPKG_SSE_ONLY}" STREQUAL "1")
+if(VCPKG_SSE_ONLY_VALUE STREQUAL "1")
     # XP/SSE-only: disable NASM assembly to avoid broken vcpkg-downloaded nasm-3.01 and all SSE2+ optimizations
     list(APPEND aom_options
         -DAOM_TARGET_CPU=generic
