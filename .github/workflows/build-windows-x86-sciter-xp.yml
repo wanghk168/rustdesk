@@ -75,7 +75,7 @@ jobs:
       - name: Build RustDesk (x86 XP)
         run: |
           $env:VCPKG_SSE_ONLY = "1"
-          cargo +nightly-2023-10-13-i686-pc-windows-msvc build -Z build-std=std,panic_abort --locked --features inline,vram --release --bins --target i686-pc-windows-msvc
+          cargo +nightly-2023-10-13-i686-pc-windows-msvc build -Z build-std=std,panic_abort --locked --features inline --release --bins --target i686-pc-windows-msvc
         shell: pwsh
 
       - name: Package artifact
