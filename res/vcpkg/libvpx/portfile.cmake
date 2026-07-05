@@ -22,9 +22,22 @@ endif()
 
 find_program(BASH NAME bash HINTS ${MSYS_ROOT}/usr/bin REQUIRED NO_CACHE)
 
-vcpkg_find_acquire_program(NASM)
-get_filename_component(NASM_EXE_PATH ${NASM} DIRECTORY)
-vcpkg_add_to_path(${NASM_EXE_PATH})
+if(DEFINED ENV{VCPKG_SSE_ONLY})
+    # XP/SSE-only: prefer the NASM installed by ilammy/setup-nasm to avoid broken vcpkg-downloaded nasm-3.01
+    set(SETUP_NASM "C:/Users/runneradmin/nasm/nasm.exe")
+    if(EXISTS ${SETUP_NASM})
+        get_filename_component(SETUP_NASM_DIR ${SETUP_NASM} DIRECTORY)
+        vcpkg_add_to_path(PREPEND ${SETUP_NASM_DIR})
+    else()
+        vcpkg_find_acquire_program(NASM)
+        get_filename_component(NASM_EXE_PATH ${NASM} DIRECTORY)
+        vcpkg_add_to_path(${NASM_EXE_PATH})
+    endif()
+else()
+    vcpkg_find_acquire_program(NASM)
+    get_filename_component(NASM_EXE_PATH ${NASM} DIRECTORY)
+    vcpkg_add_to_path(${NASM_EXE_PATH})
+endif()
 
 if(VCPKG_TARGET_IS_WINDOWS AND NOT VCPKG_TARGET_IS_MINGW)
 

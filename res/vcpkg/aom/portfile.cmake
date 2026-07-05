@@ -33,7 +33,8 @@ endif()
 
 set(aom_target_cpu "")
 if(DEFINED ENV{VCPKG_SSE_ONLY})
-    set(aom_target_cpu "-DAOM_TARGET_CPU=generic -DENABLE_SSE2=OFF -DENABLE_SSE3=OFF -DENABLE_SSSE3=OFF -DENABLE_SSE4_1=OFF -DENABLE_SSE4_2=OFF -DENABLE_AVX=OFF -DENABLE_AVX2=OFF")
+    # XP/SSE-only: disable NASM assembly to avoid broken vcpkg-downloaded nasm-3.01 and all SSE2+ optimizations
+    set(aom_target_cpu "-DAOM_TARGET_CPU=generic -DENABLE_NASM=OFF -DENABLE_SSE2=OFF -DENABLE_SSE3=OFF -DENABLE_SSSE3=OFF -DENABLE_SSE4_1=OFF -DENABLE_SSE4_2=OFF -DENABLE_AVX=OFF -DENABLE_AVX2=OFF")
 elseif(VCPKG_TARGET_IS_UWP OR (VCPKG_TARGET_IS_WINDOWS AND VCPKG_TARGET_ARCHITECTURE MATCHES "^arm"))
     # UWP + aom's assembler files result in weirdness and build failures
     # Also, disable assembly on ARM and ARM64 Windows to fix compilation issues.
