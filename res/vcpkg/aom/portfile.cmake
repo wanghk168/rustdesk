@@ -32,6 +32,7 @@ else()
             # aom-avx2.diff
             # Can be dropped when https://bugs.chromium.org/p/aomedia/issues/detail?id=3029 is merged into the upstream
             aom-install.diff
+            disable-nasm-vcpkg-sse-only.diff
     )
 endif()
 
@@ -63,6 +64,7 @@ vcpkg_cmake_configure(
     SOURCE_PATH ${SOURCE_PATH}
     OPTIONS
         ${aom_options}
+        -DVCPKG_SSE_ONLY=ON
         -DENABLE_DOCS=OFF
         -DENABLE_EXAMPLES=OFF
         -DENABLE_TESTDATA=OFF

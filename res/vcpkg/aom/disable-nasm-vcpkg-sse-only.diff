@@ -1,0 +1,61 @@
+--- a/build/cmake/aom_configure.cmake
++++ b/build/cmake/aom_configure.cmake
+@@ -157,29 +157,31 @@
+ if(AOM_TARGET_CPU STREQUAL "x86" OR AOM_TARGET_CPU STREQUAL "x86_64")
+-  find_program(CMAKE_ASM_NASM_COMPILER yasm $ENV{YASM_PATH})
+-  if(NOT CMAKE_ASM_NASM_COMPILER OR ENABLE_NASM)
+-    unset(CMAKE_ASM_NASM_COMPILER CACHE)
+-    find_program(CMAKE_ASM_NASM_COMPILER nasm $ENV{NASM_PATH})
+-  endif()
++  if(NOT VCPKG_SSE_ONLY)
++    find_program(CMAKE_ASM_NASM_COMPILER yasm $ENV{YASM_PATH})
++    if(NOT CMAKE_ASM_NASM_COMPILER OR ENABLE_NASM)
++      unset(CMAKE_ASM_NASM_COMPILER CACHE)
++      find_program(CMAKE_ASM_NASM_COMPILER nasm $ENV{NASM_PATH})
++    endif()
+ 
+-  include(CheckLanguage)
+-  check_language(ASM_NASM)
+-  if(CMAKE_ASM_NASM_COMPILER)
+-    get_asm_obj_format("objformat")
+-    unset(CMAKE_ASM_NASM_OBJECT_FORMAT)
+-    set(CMAKE_ASM_NASM_OBJECT_FORMAT ${objformat})
+-    enable_language(ASM_NASM)
+-    if(CMAKE_ASM_NASM_COMPILER_ID STREQUAL "NASM")
+-      test_nasm()
++    include(CheckLanguage)
++    check_language(ASM_NASM)
++    if(CMAKE_ASM_NASM_COMPILER)
++      get_asm_obj_format("objformat")
++      unset(CMAKE_ASM_NASM_OBJECT_FORMAT)
++      set(CMAKE_ASM_NASM_OBJECT_FORMAT ${objformat})
++      enable_language(ASM_NASM)
++      if(CMAKE_ASM_NASM_COMPILER_ID STREQUAL "NASM")
++        test_nasm()
++      endif()
++      # Xcode requires building the objects manually, so pass the object format
++      # flag.
++      if(XCODE)
++        set(AOM_AS_FLAGS -f ${objformat} ${AOM_AS_FLAGS})
++      endif()
++    else()
++      message(
++        FATAL_ERROR
++          "Unable to find assembler. Install 'yasm' or 'nasm.' "
++          "To build without optimizations, add -DAOM_TARGET_CPU=generic to "
++          "your cmake command line.")
+     endif()
+-    # Xcode requires building the objects manually, so pass the object format
+-    # flag.
+-    if(XCODE)
+-      set(AOM_AS_FLAGS -f ${objformat} ${AOM_AS_FLAGS})
+-    endif()
+-  else()
+-    message(
+-      FATAL_ERROR
+-        "Unable to find assembler. Install 'yasm' or 'nasm.' "
+-        "To build without optimizations, add -DAOM_TARGET_CPU=generic to "
+-        "your cmake command line.")
+   endif()
+   string(STRIP "${AOM_AS_FLAGS}" AOM_AS_FLAGS)
+ elseif(AOM_TARGET_CPU MATCHES "arm")
