@@ -8,6 +8,9 @@ description = "RustDesk Remote Desktop"
 default-run = "rustdesk"
 rust-version = "1.75"
 
+[patch.crates-io]
+ring = { git = "https://github.com/wanghk168/ring-xp-compat", branch = "ring-0.17.14-xp" }
+
 [lib]
 name = "librustdesk"
 crate-type = ["cdylib", "staticlib", "rlib"]
