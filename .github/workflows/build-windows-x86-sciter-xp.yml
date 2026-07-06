@@ -96,8 +96,6 @@ jobs:
         shell: pwsh
 
       - name: Build RustDesk (x86 XP)
-        env:
-          SODIUM_LIB_DIR: C:\Users\runneradmin\.cargo\registry\src\index.crates.io-6f17d22bba15001f\libsodium-sys-0.2.7\msvc\Win32\Release\v142
         run: |
           $env:VCPKG_SSE_ONLY = "1"
           # Generate the inlined Sciter HTML module required by the `inline` feature.
