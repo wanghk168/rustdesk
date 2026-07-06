@@ -98,6 +98,8 @@ jobs:
       - name: Build RustDesk (x86 XP)
         run: |
           $env:VCPKG_SSE_ONLY = "1"
+          # Generate the inlined Sciter HTML module required by the `inline` feature.
+          python res\inline-sciter.py
           cargo +nightly-2023-10-13-x86_64-pc-windows-msvc build -Z build-std=std,panic_abort --locked --features inline --release --bins --target i686-pc-windows-msvc
         shell: pwsh
 
