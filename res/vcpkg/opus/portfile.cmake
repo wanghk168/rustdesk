@@ -52,10 +52,10 @@ vcpkg_copy_pdbs()
 
 # Opus 1.5+ CMake only installs opus.h (and opus_custom.h) as PUBLIC_HEADER.
 # magnum-opus needs opus/opus_multistream.h, so install the missing public headers manually.
-file(COPY "${SOURCE_PATH}/include/opus_types.h"
-          "${SOURCE_PATH}/include/opus_defines.h"
-          "${SOURCE_PATH}/include/opus_multistream.h"
-          "${SOURCE_PATH}/include/opus_projection.h"
+file(COPY "${SOURCE_PATH}/include/opus/opus_types.h"
+          "${SOURCE_PATH}/include/opus/opus_defines.h"
+          "${SOURCE_PATH}/include/opus/opus_multistream.h"
+          "${SOURCE_PATH}/include/opus/opus_projection.h"
      DESTINATION "${CURRENT_PACKAGES_DIR}/include/opus")
 
 vcpkg_cmake_config_fixup(CONFIG_PATH lib/cmake/Opus)
