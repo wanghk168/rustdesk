@@ -24,6 +24,10 @@ jobs:
       VCPKG_s: x86-windows-static
       VCPKG_FORCE_SYSTEM_BINARIES: 1
       VCPKG_ROOT: C:\vcpkg
+      # magnum-opus's build.rs hardcodes VCPKG_ROOT\installed\<triplet>.  In manifest
+      # mode vcpkg would otherwise install to <repo>\vcpkg_installed, so force the
+      # classic installed layout so the Rust build script can find opus headers.
+      VCPKG_INSTALLED_DIR: C:\vcpkg\installed
     steps:
       - uses: actions/checkout@v4
         with:
