@@ -78,13 +78,20 @@ jobs:
 
           # magnum-opus, scrap and other crates' build.rs scripts hardcode
           # VCPKG_ROOT\installed\x86-windows-static. In manifest mode vcpkg builds
-          # under <repo>\vcpkg_installed, so mirror the entire include tree into
+          # under <repo>\vcpkg_installed, so mirror the entire installed tree into
           # the classic path the build scripts expect.
           $manifestInstalled = "${{ github.workspace }}\vcpkg_installed\x86-windows-static"
           $classicInstalled = "C:\vcpkg\installed\x86-windows-static"
-          if (Test-Path "$manifestInstalled\include") {
-            New-Item -ItemType Directory -Force -Path "$classicInstalled\include" | Out-Null
-            Copy-Item -Force -Recurse -Path "$manifestInstalled\include\*" -Destination "$classicInstalled\include"
+          if (Test-Path $manifestInstalled) {
+            New-Item -ItemType Directory -Force -Path $classicInstalled | Out-Null
+            foreach ($dir in @("include", "lib", "bin", "debug", "share")) {
+              $src = "$manifestInstalled\$dir"
+              $dst = "$classicInstalled\$dir"
+              if (Test-Path $src) {
+                New-Item -ItemType Directory -Force -Path $dst | Out-Null
+                Copy-Item -Force -Recurse -Path "$src\*" -Destination $dst
+              }
+            }
           }
         shell: pwsh
 

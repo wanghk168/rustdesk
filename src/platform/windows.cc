@@ -2,7 +2,9 @@
 #include <wtsapi32.h>
 #include <tlhelp32.h>
 #include <comdef.h>
+#if _WIN32_WINNT >= 0x0600
 #include <xpsprint.h>
+#endif
 #include <cstdio>
 #include <cstdint>
 #include <intrin.h>
@@ -893,7 +895,8 @@ extern "C"
     }
 } // end of extern "C"
 
-// Remote printing 
+// Remote printing
+#if _WIN32_WINNT >= 0x0600
 extern "C"
 {
 // Dynamic loading of XPS Print functions
@@ -922,7 +925,7 @@ static bool InitXpsPrint()
             flog("Failed to load XpsPrint.dll. Error: %d\n", GetLastError());
             return false;
         }
-        
+
         StartXpsPrintJobPtr = (StartXpsPrintJobFunc)GetProcAddress(xpsPrintModule, "StartXpsPrintJob");
         if (StartXpsPrintJobPtr == nullptr)
         {
@@ -954,9 +957,13 @@ static bool InitXpsPrint()
             return -1;
         }
 
+        HRESULT hr = S_OK;
         BOOL isCoInitializeOk = FALSE;
-        HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-        if (hr == RPC_E_CHANGED_MODE)
+        if (CoInitializeEx == nullptr)
+        {
+            hr = CoInitialize(nullptr);
+        }
+        else
         {
             hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
         }
@@ -1056,3 +1063,17 @@ static bool InitXpsPrint()
 
 #pragma warning(pop)
 }
+#else
+extern "C"
+{
+    int PrintXPSRawData(LPWSTR printerName, BYTE *rawData, ULONG dataSize)
+    {
+        flog("XPS Print is not supported on Windows XP\n");
+        return -1;
+    }
+
+    void CleanupXpsPrint()
+    {
+    }
+}
+#endif
