@@ -91,6 +91,17 @@ fn main() {
     build_manifest();
     #[cfg(windows)]
     build_windows();
+    #[cfg(windows)]
+    {
+        // Only the main rustdesk binary is a GUI app; naming/service are console binaries.
+        // Setting /SUBSYSTEM:WINDOWS,5.01 globally in .cargo/config.toml forces every
+        // binary to require a WinMain entry, which naming/service don't have.
+        if let Ok(name) = std::env::var("CARGO_BIN_NAME") {
+            if name == "rustdesk" {
+                println!("cargo:rustc-link-arg=/SUBSYSTEM:WINDOWS,5.01");
+            }
+        }
+    }
     let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap();
     if target_os == "macos" {
         #[cfg(target_os = "macos")]

@@ -7,7 +7,7 @@ rustflags = ["-Ctarget-feature=+crt-static"]
 [target.i686-pc-windows-msvc]
 rustflags = [
     "-C", "target-feature=+crt-static,+sse2,+ssse3",
-    "-C", "link-args=/NODEFAULTLIB:MSVCRT /DELAYLOAD:d3d11.dll /DELAYLOAD:dxgi.dll delayimp.lib /SUBSYSTEM:WINDOWS,5.01"
+    "-C", "link-args=/NODEFAULTLIB:MSVCRT /DELAYLOAD:d3d11.dll /DELAYLOAD:dxgi.dll delayimp.lib"
 ]
 [target.aarch64-pc-windows-msvc]
 rustflags = ["-Ctarget-feature=+crt-static"]
